@@ -33,9 +33,13 @@ export function RecentTransactions() {
       </div>
       {isLoading && <p className={styles.message}>Loading…</p>}
       {!isLoading && !transactions?.length && <p className={styles.message}>No transactions yet.</p>}
-      {transactions?.map((tx) => (
-        <TransactionRow key={tx.id} transaction={tx} onSelect={setSelected} />
-      ))}
+      <ul className={styles.list}>
+        {transactions?.map((tx) => (
+          <li key={tx.id}>
+            <TransactionRow transaction={tx} onSelect={setSelected} />
+          </li>
+        ))}
+      </ul>
 
       <Drawer open={selected !== null} title="Transaction details" onClose={() => setSelected(null)}>
         {selected && (
