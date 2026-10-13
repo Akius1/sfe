@@ -1,4 +1,4 @@
-import type { ApiSuccess } from '@/types/api'
+import type { ApiErrorBody, ApiSuccess } from '@/types/api'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api'
 
@@ -13,6 +13,14 @@ export class ApiError extends Error {
   }
 }
 
+const FALLBACK_MESSAGE = 'Something went wrong. Please try again.'
+
+function isErrorBody(body: unknown): body is ApiErrorBody {
+  if (typeof body !== 'object' || body === null || !('error' in body)) return false
+  const { error } = body as { error: unknown }
+  return typeof error === 'object' && error !== null && 'code' in error && 'message' in error
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<ApiSuccess<T>> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
@@ -21,9 +29,17 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiSucc
       ...init.headers,
     },
   })
-  const body = await res.json()
-  console.log('[api]', path, body)
-  return body
+
+  // A proxy or gateway can answer with HTML, so a failed parse must not hide the status.
+  const body: unknown = await res.json().catch(() => null)
+
+  if (!res.ok) {
+    if (isErrorBody(body)) throw new ApiError(res.status, body.error.code, body.error.message)
+    throw new ApiError(res.status, 'UNKNOWN', FALLBACK_MESSAGE)
+  }
+  if (body === null) throw new ApiError(res.status, 'INVALID_RESPONSE', FALLBACK_MESSAGE)
+
+  return body as ApiSuccess<T>
 }
 
 export const api = {
