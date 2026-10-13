@@ -1,0 +1,29 @@
+/* The last column is reserved for "Clear filters" so the fields do not move when it appears. */
+.filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px 180px 114px;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.search input {
+  text-overflow: ellipsis;
+}
+
+.clear {
+  justify-self: start;
+}
+
+@media (max-width: 900px) {
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .search {
+    grid-column: 1 / -1;
+  }
+
+  .clear {
+    grid-column: 1 / -1;
+  }
+}
